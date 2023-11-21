@@ -1,7 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
-const cors = require('cors'); // Import cors
+const cors = require('cors'); 
+const bodyParser = require('body-parser');
+
 
 const app = express();
 
@@ -11,11 +13,11 @@ app.use(express.json());
 
 // Middleware for CORS
 app.use(cors());
+app.use(bodyParser.json()); 
+app.use(bodyParser.urlencoded({ extended: true })); 
 
-// Connect to MongoDB
-mongoose.connect('mongodb+srv://root:Svr9QXnKOYroT9qB@rest-recipe-api-db.cfupl.mongodb.net/?retryWrites=true&w=majority', {
+mongoose.connect('mongodb+srv://root:Svr9QXnKOYroT9qB@rest-recipe-api-db.cfupl.mongodb.net/flavorcraft',);
 
-});
 
 // Use auth routes
 app.use('/auth', authRoutes);
