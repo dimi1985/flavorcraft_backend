@@ -1,51 +1,77 @@
+// controllers/UserController.js
+
 const User = require('../models/User');
+const bcrypt = require('../utils/bcrypt');
 
-exports.register = async (req, res) => {
-  const { username, password } = req.body;
-
-  console.log('username' + username)
-
+exports.register = async (event, context) => {
   try {
+    const requestBody = JSON.parse(event.body);
+    const { username, password } = requestBody;
+
     // Check if the username is already taken
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ message: 'Username is already taken' });
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Username is already taken' }),
+      };
     }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create a new user
     const newUser = new User({
       username,
-      password, 
+      password: hashedPassword,
     });
 
     // Save the user to the database
     await newUser.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    return {
+      statusCode: 201,
+      body: JSON.stringify({ message: 'User registered successfully' }),
+    };
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: 'Internal Server Error' }),
+    };
   }
 };
 
-exports.login = async (req, res) => {
-  const { username, password } = req.body;
-
+exports.login = async (event, context) => {
   try {
+    const requestBody = JSON.parse(event.body);
+    const { username, password } = requestBody;
+
     // Check if the user exists
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ message: 'Invalid credentials' }),
+      };
     }
 
-    // Check if the password matches (in a real-world application, you'd want to hash the password for this check)
-    if (user.password !== password) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    // Check if the password matches
+    const passwordMatches = await bcrypt.compare(password, user.password);
+    if (!passwordMatches) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ message: 'Invalid credentials' }),
+      };
     }
 
-    res.status(200).json({ message: 'Login successful' });
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Login successful' }),
+    };
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: 'Internal Server Error' }),
+    };
   }
 };
